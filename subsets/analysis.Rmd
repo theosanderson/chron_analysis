@@ -1,0 +1,104 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(lubridate)
+
+
+```
+
+```{r}
+
+    
+treetime = read_delim("~/ebola/dates.tsv",delim="\t", ,skip=1) %>% rename(node=`#node`) %>% mutate(lower = date_decimal(as.numeric(`lower bound`)),upper = date_decimal(as.numeric(`upper bound`)),middle = date_decimal(as.numeric(`numeric date`)))
+
+
+chronumental = read_tsv("/Users/sandert/treetime_examples/data/ebola/chronumental_dates_ebola.metadata.csv.tsv", col_names = c("node","date_chron"))
+chronumental
+
+both = inner_join(treetime,chronumental)
+both
+
+
+internal = both %>% filter(startsWith(node,"NODE_"))
+ggplot(internal,aes(x=middle,xmin=lower,xmax=upper,y=as_date(date_chron)))+geom_errorbarh(color="gray")+geom_point(size=0.5) +theme_bw()
+
+mean(internal$date_chron > internal$lower & internal$date_chron <internal$upper,na.rm=TRUE)+labs(x="Treetime date with confidence interval",y="")
+
+```
+
+
+```{r}
+
+ground_truth = read_tsv("./public-2021-09-15.metadata.tsv.gz")
+ground_truth$date = ymd(ground_truth$date)
+ground_truth = ground_truth%>% filter(!is.na(date)) %>% unique()
+
+files = list.files(".",pattern=".*out.tsv.gz$")
+
+do_analysis = function(a_file){
+  print(a_file)
+input_f = gsub(".out.tsv","",a_file)
+output<- read_tsv(a_file)
+input<- read_tsv(input_f) %>% select(strain,date) %>% unique()
+
+together = ground_truth %>% full_join(input,suffix=c("_gt","_in"),by="strain") %>% full_join(output,suffix=c("","_out"))
+
+for_comparison = together %>% filter(is.na(date_in), !is.na(date_gt),!is.na(predicted_date)) %>% mutate(days_diff = interval(date_gt,predicted_date)/days(1))
+
+
+output = for_comparison %>% select(days_diff,date_gt,predicted_date)
+output$name=input_f
+
+return(output)
+
+}
+results = lapply(files,do_analysis)
+a_file=files[1]
+
+
+```
+```{r,fig.width=20,fig.height=20}
+all = bind_rows(results) 
+
+unique(all$name)
+```
+```{r}
+all$prop = as.numeric(gsub( "metadata_subset_","",gsub( ".tsv.gz","",all$name)))
+
+
+```
+
+```{r}
+library(scales)
+levels = as.character(sort(unique(all$prop)))
+ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(as.character(prop),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")
+```
+```{r}
+ggplot(all %>% filter(rnorm(length(name))<0.000001), aes(x=date_gt,y=predicted_date)) +geom_point(alpha=0.1)+coord_fixed()+facet_wrap(~name)
+```
+
+```{r}
+output = read_tsv("./chronumental_dates_nextstrain_metadata.tsv.tsv")
+nextstrain = read_tsv("./nextstrain_metadata.tsv")
+
+both = inner_join(output,nextstrain)%>% mutate(days_diff = interval(date,predicted_date)/days(1))
+ggplot(both,aes(x=days_diff))+geom_density()
+
+both %>% filter(date=="?") %>%mutate(is_hit = predicted_date>lower_date & upper_date>predicted_date) %>% group_by(is_hit) %>% summarise(n=n())
+
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
