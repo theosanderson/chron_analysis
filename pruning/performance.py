@@ -7,7 +7,7 @@ import subprocess
 output_file = open("performance.tsv", "wt")
 output_file.write("num_tips\ttime\tmemory\n")
 
-number_of_tips = [4**x for x in range(2, 20)]
+number_of_tips = [3**x for x in range(4, 40)]
 
 metadata = pd.read_csv("../public-2021-09-15.metadata.tsv.gz", sep="\t")
 
@@ -74,7 +74,7 @@ def main():
 
         #Time the treetime call:
         start_time = time.time()
-        command = f"treetime clock --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --sequence-length 30000  --keep-root --outdir ./working/"
+        command = f"treetime --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --sequence-length 30000  --keep-root --outdir ./working/"
         timing, mem = run_command_and_get_time_and_memory_usage(command)
         output_file.write(f"{num_tips}\t{timing}\t{mem}\n")
         output_file.flush()
