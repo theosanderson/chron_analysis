@@ -16,6 +16,7 @@ def run_process_and_return_stderr_and_stdout(command):
     """
     Run a command and return stdout and stderr.
     """
+    print(command)
     process = subprocess.run(command,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
@@ -29,21 +30,18 @@ def run_command_and_get_time_and_memory_usage(command):
     We use /usr/bin/time to get this. Need to use stderr.
     """
     start_time = time.time()
+
     stdout, stderr = run_process_and_return_stderr_and_stdout(
-        ("/usr/bin/time -l " + command))
+        ("/usr/bin/time -f %M " + command + ""))
+
     print(stdout)
+    print(stderr)
     print(command)
     # extract memory usage, which is maximum resident set size
-    for line in stderr.split("\n"):
-        if "maximum resident set size" in line:
-            components = line.split(" ")
-            # find the integer
-            for component in components:
-                try:
-                    mem = int(component)
-                    break
-                except:
-                    pass
+    lines = stderr.split("\n")
+    #get last line
+    mem = lines[-2]
+    print(f"Got memory {mem}")
 
     end_time = time.time()
     return end_time - start_time, mem
@@ -52,7 +50,7 @@ def run_command_and_get_time_and_memory_usage(command):
 def main():
     for num_tips in tqdm.tqdm(number_of_tips):
         os.system(
-            f"gzcat ../public-2021-09-15.all.nwk.gz | gotree prune --random {num_tips} --revert > working/tree.{num_tips}.nwk"
+            f"zcat ../public-2021-09-15.all.nwk.gz | gotree prune --random {num_tips} --revert > working/tree.{num_tips}.nwk"
         )
         os.system(
             f"cat working/tree.{num_tips}.nwk | gotree labels --tips > working/tips.{num_tips}.txt"
