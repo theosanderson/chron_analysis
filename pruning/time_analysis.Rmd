@@ -18,7 +18,7 @@ perf_for_fit = perf %>% filter(n_tips>500)
 
 
 
-ggplot(perf, aes(x=n_tips,y=seconds))+geom_point()+scale_x_log10() + scale_y_log10() +geom_smooth(data=perf_for_fit,method="glm")
+ggplot(perf, aes(x=n_tips,y=seconds))+geom_point()+scale_x_log10(limits=c(10,4e6)) + scale_y_log10() +geom_smooth(data=perf_for_fit,method="glm",fullrange=TRUE)
 
 
 ```
