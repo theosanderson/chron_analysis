@@ -3,8 +3,24 @@ import pandas as pd
 import tqdm
 import time
 import subprocess
+import argparse
+#create an argparser to get a single argument called mode
+#mode can be either "treetime" or "chronumental"
 
-output_file = open("performance.tsv", "wt")
+parser = argparse.ArgumentParser(description='Get perf')
+parser.add_argument('--mode',
+                    type=str,
+                    default='treetime',
+                    help='Mode to run in. Can be treetime or chronumental',
+                    choices=['treetime', 'chronumental'])
+
+parser.add_argument('--gpu', action='store_true', help='Use GPU')
+
+args = parser.parse_args()
+
+output_file = open(
+    f"performance{'' if args.mode=='treetime' else '_chron'}{'' if not args.gpu else '_gpu'}.tsv",
+    "wt")
 output_file.write("num_tips\ttime\tmemory\n")
 
 number_of_tips = [3**x for x in range(4, 40)]
@@ -72,7 +88,10 @@ def main():
 
         #Time the treetime call:
         start_time = time.time()
-        command = f"treetime --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --sequence-length 30000  --keep-root --outdir ./working/"
+        if args.mode == 'treetime':
+            command = f"treetime --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --sequence-length 30000  --keep-root --outdir ./working/"
+        else:
+            command = f"chronumental --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --tree_out /dev/null --dates_out /dev/null --steps 1000 --disable_gpu"
         timing, mem = run_command_and_get_time_and_memory_usage(command)
         output_file.write(f"{num_tips}\t{timing}\t{mem}\n")
         output_file.flush()
