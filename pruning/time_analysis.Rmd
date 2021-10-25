@@ -10,6 +10,7 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r,fig.width=7,fig.height=7}
 library(tidyverse)
 
+<<<<<<< HEAD
 library(ggpubr)
 
 library(ggthemes)
@@ -38,6 +39,26 @@ mem_plot_log = mem_plot  + scale_y_log10(labels = scales::label_bytes("auto_si")
 
 mem_plot_log
 
+=======
+perf = read_tsv("performance.tsv") %>% mutate(algorithm_full="TreeTime") %>% mutate(algorithm="TreeTime")
+perf_chron = read_tsv("performance_chron.tsv") %>% mutate(algorithm_full="Chronumental (1000 steps)")%>% mutate(algorithm="Chronumental")
+
+#perf_chron_longer = read_tsv("performance_chron.tsv") %>% mutate(algorithm_full="Chronumental (2000 steps)",time=time*10)%>% mutate(algorithm="Chronumental")
+together = bind_rows(perf,perf_chron)#, perf_chron_longer)
+
+together
+
+time_plot = ggplot(together, aes(x=num_tips,y=time/60,color = algorithm))+geom_point()+scale_x_log10(labels = scales::comma) + scale_y_continuous(labels = scales::comma) +theme_light()+geom_line()+labs(x="Number of tips",y="Time / minutes", color="Approach")
+
+
+
+mem_plot = ggplot(together %>% filter(algorithm_full!="Chronumental (2000 steps)") , aes(x=num_tips,y=memory*1000,color = algorithm))+geom_point()+scale_x_log10(labels = scales::comma) + scale_y_log10(label = scales::label_bytes("auto_si"))+coord_cartesian(xlim=c(60,4e6),ylim=c()) +theme_light()+geom_line() +labs(x="Number of tips",y="Memory usage", color="Approach")
+
+time_plot_log = time_plot  + scale_y_log10(labels = scales::comma)
+mem_plot_log = time_plot  + scale_y_log10(labels = scales::comma)
+
+library(ggpubr)
+>>>>>>> 16d78d5bc724e649ad0bb7b54ef24bb79491cbef
 
 ggarrange(time_plot,mem_plot,time_plot_log,mem_plot_log,  common.legend = TRUE,labels="AUTO")
 
