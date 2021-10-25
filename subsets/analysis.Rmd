@@ -37,7 +37,7 @@ mean(internal$date_chron > internal$lower & internal$date_chron <internal$upper,
 
 ```{r}
 
-ground_truth = read_tsv("./public-2021-09-15.metadata.tsv.gz")
+ground_truth = read_tsv("../public-2021-09-15.metadata.tsv.gz")
 ground_truth$date = ymd(ground_truth$date)
 ground_truth = ground_truth%>% filter(!is.na(date)) %>% unique()
 
@@ -71,15 +71,21 @@ all = bind_rows(results)
 unique(all$name)
 ```
 ```{r}
-all$prop = as.numeric(gsub( "metadata_subset_","",gsub( ".tsv.gz","",all$name)))
-
-
+all$prop = as.numeric(gsub( "metadata_subset_","",gsub( ".tsv","",all$name)))
+```
+```{r}
+all
 ```
 
 ```{r}
+
+
+
 library(scales)
-levels = as.character(sort(unique(all$prop)))
-ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(as.character(prop),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")
+levels = gsub("\\.*0+%","%",scales::label_percent()(sort(unique(all$prop))))
+
+ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(gsub("\\.*0+%","%",scales::label_percent()(prop)),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")+labs(color="Metadata retained",x="Prediction error",y="Density")
+ggsave("../manuscript/Figures/blinding.pdf",width=3.5,height=3.5)
 ```
 ```{r}
 ggplot(all %>% filter(rnorm(length(name))<0.000001), aes(x=date_gt,y=predicted_date)) +geom_point(alpha=0.1)+coord_fixed()+facet_wrap(~name)
