@@ -19,18 +19,22 @@ Phylogenetic trees are an important tool for interpreting sequenced genomes, and
 theo.sanderson\at crick.ac.uk
 \end{corrauthor}
 
-\begin{figure}
-\centering
-\includegraphics[width=0.75\linewidth]{Figures/temp.png}
-\caption{\textbf{This is a nucleus.}\\
-(\textbf{A}) This is a one-column figure with a legend as a caption underneath.}
-\label{fig:nucleus}
-\end{figure}
+
 
 \section*{Introduction}\label{s:introduction}
 The accumulation of mutations over time in living things means that genomes sequenced from a population capture information on the historical relationships between its members. For non-recombining organisms such as viruses, these can be represented as a phylogenetic tree. The tips of such a tree are sequenced viruses, where we have a genome sequence, and typically also metadata on the date and location at which the sample was taken. Phylogenetic trees are often represented as a "distance-tree" in which the lengths of branches correspond to the genetic distance predicted between ancestral nodes and their descendants. However an alternative approach is to create a "time-tree", where all nodes are positioned according to the date at which they are thought to have occurred. While establishing the dates of the tips is straightforward, using the metadata, inferring the likely dates for internal nodes requires the use of algorithms.
 
+
+
 In recent years a number of approaches have been developed for creating time-trees. These include methods such as TreeTime \citep{Sagulenko2018-kr}, TreeDater \citep{Volz2017-le},  BactDating \citep{Didelot2018-vf} and LSD \citep{To2016-cw} , which all take as input a distance tree (and sometimes sequences) and use these to construct a predicted time tree. An alternative approach is to use BEAST \citep{Suchard2018-ma} to infer time and distance trees together from the sequences themselves. These algorithms can be assessed in two orthogonal dimensions. Firstly, how accurately do they model the underlying evolutionary dynamics? Longstanding MCMC-based approaches such as BEAST are likely to be the most preferable options if such fidelity is the only criterion on which an algorithm is being evaluated. However a second dimension has prompted the development of new tools: the ability of the algorithm to scale to datasets of interest, which are becoming increasingly large. BEAST-based analyses can take days or weeks for datasets with hundreds of sequences \citep{Sagulenko2018-kr}, which prompted the development of the other approaches discussed.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\linewidth]{Figures/timetree.pdf}
+\caption{\textbf{This is a nucleus.}\\
+(\textbf{A}) This is a one-column figure with a legend as a caption underneath.}
+\label{fig:nucleus}
+\end{figure}
 
 The unprecedented response to the SARS-CoV-2 pandemic has created a new magnitude of viral genomic data to which none of these tools easily scale. Nextstrain \citep{Hadfield2018-fb} has been an invaluable tool for analysis of viral genomic data during the SARS-CoV-2 pandemic, in part because it presents sequence data as easily interpretable time-trees, which are inferred using TreeTime. However these calculations are one of the key bottlenecks in the analysis, and together such bottlenecks mean that NextStrain analyses are typically limited to fewer than 10,000 sequences, sampled in a principled way. With more than 4,000,000 SARS-CoV-2 genomes now sequenced, such analyses use only 0.25\% of the available sequencing data (though sampled to provide as much information as possible). Importantly, however sophisticated a time-tree algorithm, its performance can still be limited by the data provided to it. Every node with chronological metadata creates a constraint on the time tree, providing information about the positions of unknown nodes. In the extreme case in which every circulating virus was sequenced every single day, inferring a time tree would be, in terms of logic, trivial. In countries that have been able to perform large scale genomic surveillance there have been times where a substantial portion (perhaps more than half) of all infections have been sequenced. Such dense data can provide so many constraints on the dates of internal nodes as to make inferring chronology simple, in terms of the sophistication of approach needed, even for a putative human curator working manually. What is not trivial is the scale of the data -- constructing such a time tree for a dataset featuring millions of nodes and branches poses computational challenges, especially given the possibility of occasionally erroneous metadata. To our knowledge no existing tool is able to perform such an analysis.
 
