@@ -11,4 +11,5 @@ metadata.to_csv(filename, sep='\t', index=False)
 import os
 
 command = f"chronumental --tree  ../public-2021-09-15.all.nwk.gz --dates {filename} --steps 2000 --dates_out {filename}.out.tsv --tree_out {filename}.out.nwk"
+print(command)
 os.system(command)
