@@ -53,7 +53,7 @@
 \RequirePackage{lmodern}
 \RequirePackage[detect-all=true]{siunitx}
 \RequirePackage{textgreek}
-%\RequirePackage{cleveref}
+\RequirePackage{cleveref}
 \RequirePackage{gensymb}
 \RequirePackage{textcomp}
 % no hyphenation
