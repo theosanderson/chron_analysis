@@ -50,42 +50,41 @@ The second set of data available to our algorithm is the number of mutations tha
 
 The model is fit by using the Stochastic Variational Inference module of NumPyro. The Adam optimiser is used to adjust the latent variables to maximise the evidence lower bound. Although this approach uses a form of variational inference, we do not aim to estimate the uncertainty in our predictions of branch time lengths, or in node dates. In the guide for the model, branches' time-lengths are represented as Delta distributions with a single value. We do provide the ability to model uncertainty in the mutation rate, though in any given sample of the model this is treated as the same across all branches.
 
-Chronumental uses TreeSwift to read trees rapidly. The command-line interface is to a great extent inspired by TreeTime.
+Chronumental uses TreeSwift [cite] to read trees rapidly. The command-line interface is to a great extent inspired by TreeTime.
 
 
-Dataset and tree fitting
+\subsection*{Dataset and tree fitting}
 
 Our immediate motivation in developing Chronumental was to allow time trees to be constructed for the very large phylogenetic trees generated during the SARS-CoV-2 pandemic. An open-source repository, sarscov2phylo, was an initiative that created large public phylogenies from GISAID data until November 2020 using iqtree. The development of UShER \cite{Turakhia2021-la}, to permit rapid expansion of such a tree by sequential addition of new samples by maximum parsimony, enabled phylogenetics to keep up with the ever-expanding sequencing efforts that have occurred during 2021. There are two major such trees: a public tree maintained maintained by researchers at UCSC \cite{McBroome2021-fn}, which uses data available without legal restrictions from the INSDC databases \cite{Arita2021-dc}, COG-UK \cite{Nicholls2021-fz}, and the database of the China Center for Bioinformation, and the Audacity tree maintained within the GISAID Initiative [cite GISAID]. Both groups maintain convenient metadata sets for the associated datasets.
 
 We used Chronumental to create time trees for both of these trees, using default parameters other than increasing the number of steps to XXX. In the interests of reproducible analysis we focus our benchmarking studies on the UCSC public tree. Its creators maintain an archive of trees from various points in time, and here we used the 2021-09-15 tree.
 
 
-Benchmarking
+\subsection*{Benchmarking}
 
 We initially assessed the general plausibility of our trees by visualising and exploring it in Taxodium [citation, footnote with link to special tree]. For a more quantitative assessment, we conducted experiments in which we blinded the algorithm to some of the available date metadata. While the nodes whose dates must be inferred are typically the tree's internal nodes, the algorithm is equally able to estimate the date of any uncertain tip nodes (which may arise even in real applications, where some metadata is missing). Estimating the date of a tip node essentially requires estimation of the date of an internal node, and also estimation of the length of time between that internal node and the tip. Therefore, by blinding the algorithm to a certain number of tips we can assess how well it recapitulates the ground-truth, providing in one sense an upper bound on the error with which it estimates the dates of internal nodes.
 
 For the public tree we performed this analysis with a wide range of proportions of the metadata blinded, to assess how important densely sampled data are to predicting node dates.
 
-Speed comparisons
-To provide a sense of the challenge that Chronumental was designed to address, we measured the running times from an existing tool, TreeTime, for a range of tree sizes. We started from the 2021-09-31 public tree, and used gotree prune to retain a small proportion of nodes, which we increased in increments. We performed these measurements on a 2018 MacBook Pro with a 2.3 GHz Intel Core i5 processor and 8 GB of RAM.
+\subsection*{Speed comparisons}
+To provide a sense of the challenge that Chronumental was designed to address, we measured the running times from an existing tool, TreeTime, for a range of tree sizes. We started from the 2021-09-31 public tree, and used gotree [cite] prune to retain a small proportion of nodes, which we increased in increments. 
 
 
-Comparing predictive performance to a widely-used algorithm
+\subsection*{Comparing predictive performance to a widely-used algorithm}
 
-To compare our algorithm  to a widely accepted one, we used the dataset of Ebola genomes from the 2014 outbreak of Ebola in West Africa  \cite{Dudas2017-km}, using the 350 genomes and metadata presented in the treetime_examples repository by Sagulenko et al. We firstly ran TreeTime, with the --confidence and --covariance parameters (and providing the sequence alignment). In the course of this analysis TreeTime re-rooted the distance tree, which it output alongside the time tree. We used this distance tree as an input to Chronumental, along with the metadata, and compared its results to those obtained with TreeTime
+To compare our algorithm  to a widely accepted one, we used the dataset of Ebola genomes from the 2014 outbreak of Ebola in West Africa  \cite{Dudas2017-km}, using the 350 genomes and metadata presented in the treetime\_examples repository by Sagulenko et al. We firstly ran TreeTime, with the --confidence and --covariance parameters (and providing the sequence alignment). In the course of this analysis TreeTime re-rooted the distance tree, which it output alongside the time tree. We used this distance tree as an input to Chronumental, along with the metadata, and compared its results to those obtained with TreeTime
 
 
-Results
+\section*{Results}
 
-A time tree with xxx nodes
+\subsection*{A time tree with xxx nodes}
 
-We used Chronumental to assign dates to each node in the public global tree created by UCSC. The algorithm was able to construct a tree in which x% of sequences were placed within a day of their metadata position. Supervision is provided on these dates, so this simply measures the algorithms ability to reconcile date metadata into a tree structure, rather than its ability to predict the dates for nodes where the date is unknown.
+We used Chronumental to assign dates to each node in the public global tree created by UCSC. The algorithm was able to construct a tree in which x\% of sequences were placed within a day of their metadata position. Supervision is provided on these dates, so this simply measures the algorithms ability to reconcile date metadata into a tree structure, rather than its ability to predict the dates for nodes where the date is unknown.
 
-Prediction of nodes
+\subsection*{Prediction of nodes}
 
-dsads
 
-Identification of anachronistic nodes
+\subsection*{Identification of anachronistic nodes}
 
 Interestingly, we found xxx nodes were placed more than yyy from their date as indicated in the metadata. In doing this the algorithm incurs a large cost to its loss function (a true date so far from the observed date is considered highly unlikely), and so the expectation is that this will only occur where placing that node close to the date recorded in its metadata is also extremely unlikely, given the mutation profile and tree topology observed. To consider these possibilities, we plotted the metadata date of sequences against their observed date. We see, as expected, an extremely close relationship, with rare outliers. By categorising nodes according to the lineage of their sequences, we can see whether the genotypes of the samples plausibly correspond to their metadata date. We found that outlier samples belonged to lineages that are known not to have existed at the time at which their metadata would indicate, suggesting that the metadata is inaccurate for these sequences, and the calculated date significantly more correct. 
 
@@ -95,10 +94,19 @@ To facilitate analyses of anachronistic sequences, or the imputing of dates for 
 
 Comparison to an existing algorithm
 
+\begin{figure*}
+\centering
+\includegraphics[width=0.9\linewidth]{manuscript/Figures/performance.pdf}
+\caption{\textbf{Computational requirements and runtime comparison}\\
+
+(\textbf{A}) This is a regular figure with a legend as a caption underneath. Inset: 3X zoom. Scale bar, \SI{10}{\micro\meter}.}
+\label{fig:performance}
+\end{figure*}
+
 We used a smaller dataset
 
 
-Discussion
+\section*{Discussion}
 
 
 Chronumental has been developed to tackle a specific problem -- very large trees -- unserved by existing approaches. Chronumental does not feature all of the features of some alternative approaches. There is currently no capacity for polytomy resolution. An algorithm could be developed that would take a time tree previously optimised by Chronumental and identify the most likely resolutions of each polytomy, given the date estimates from Chronumental, perhaps running iteratively with Chronumental date updates. Chronumental does not identify ancestral residues at genomic positions as does TreeTime. 
@@ -114,42 +122,8 @@ UShER \cite{Turakhia2021-la} can efficiently perform ancestral state reconstruct
 
 Appendix
 
-Treetime benchmarking: treetime was run with: treetime clock --dates working/metadata.65536.tsv --tree working/tree_scaled.65536.nwk --sequence-length 30000  --keep-root --outdir ./working/
+Treetime benchmarking: treetime was run with: treetime clock --dates working/metadata.65536.tsv --tree working/tree\_scaled.65536.nwk --sequence-length 30000  --keep-root --outdir ./working/
 
-
-\subsection*{Citations and full size figures with legends underneath}
-
-Text is added like this
-This is a reference to a published paper \citep{watson_molecular_1953}.
-We can cite other things too \citep{tipton_complexities_2019,zheng_genome_2011,alberts_molecular_2002}
-
-This is a new paragraph.
-New sentences on a new line.
-New sentences on a new line.
-
-% this is how to add a comment
-This is a new result.
-% this is how to add a figure with the name cells.
-As you can see (Figure \ref{fig:cells}).
-
-% full size figure is figure*
-\begin{figure*}
-\centering
-\includegraphics[width=0.75\linewidth]{Figures/temp.png}
-\caption{\textbf{These are cells.}\\
-(\textbf{A}) This is a regular figure with a legend as a caption underneath. Inset: 3X zoom. Scale bar, \SI{10}{\micro\meter}.}
-\label{fig:cells}
-\end{figure*}
-
-It is possible to add a one-column Figure like this (Figure \ref{fig:nucleus}).
-To add Supplementary Figures you can do either of these things and have them at the end of the end of the paper (Supplementary Figure \ref{suppfig:endosome}).
-Or like this (Supplementary Figure \ref{videosupp:lysosome}).
-
-\lipsum[10]
-
-\subsection*{Subsections are written like this}
-
-\lipsum[11]
 
 % one-column size figure is figure
 \begin{figure}
@@ -160,39 +134,6 @@ Or like this (Supplementary Figure \ref{videosupp:lysosome}).
 \label{fig:nucleus}
 \end{figure}
 
-\lipsum[12]
-
-\subsection*{Another subsection}
-
-\lipsum[13-14]
-
-\subsection*{Another subsection}
-
-\lipsum[13-14]
-
-\subsection*{Another subsection}
-
-\lipsum[13-14]
-
-\section*{Discussion}\label{s:discussion}
-
-This is the discussion section where you wax lyrical about your findings.
-You can put your work in the context of other published work \citep{brenner_uga:_1967}
-
-\lipsum[100-104]
-
-\section*{Methods}\label{s:methods}
-
-\subsection*{Molecular biology}
-
-Details of plasmids are usually first.
-Followed by cell biology section.
-We have special units defied for molar and for units, e.g. \SI{1}{\Molar} sucrose, \SI{10}{\Units\per\milli\litre}.
-Otherwise use siunitx for everything else. \SI{37}{\degreeCelsius} and what-not.
-
-\subsection*{Cell biology}
-
-\lipsum[80]
 
 \section*{Bibliography}
 \bibliographystyle{RoyleLab-StyleBib.bst}
