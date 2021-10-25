@@ -242,15 +242,15 @@
   {0em}
   {#1}
   []  
-\titleformat{\subsection}[runin]
+\titleformat{\subsection}
   {\sffamily\bfseries}
-  {\thesubsection.}
+  {\thesubsection}
   {0.5em}
-  {#1. }
+  {#1 }
   []
-\titleformat{\subsubsection}[runin]
+\titleformat{\subsubsection}
   {\sffamily\small\bfseries\itshape}
-  {\thesubsubsection.}
+  {\thesubsubsection}
   {0.5em}
   {#1. }
   []    
