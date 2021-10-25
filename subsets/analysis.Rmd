@@ -33,7 +33,9 @@ ggplot(internal,aes(x=middle,xmin=lower,xmax=upper,y=as_date(date_chron)))+geom_
 mean(internal$date_chron > internal$lower & internal$date_chron <internal$upper,na.rm=TRUE)+labs(x="Treetime date with confidence interval",y="")
 
 ```
-
+```{r}
+a
+```
 
 ```{r}
 
@@ -84,8 +86,8 @@ all
 library(scales)
 levels = gsub("\\.*0+%","%",scales::label_percent()(sort(unique(all$prop))))
 
-ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(gsub("\\.*0+%","%",scales::label_percent()(prop)),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")+labs(color="Metadata retained",x="Prediction error",y="Density")
-ggsave("../manuscript/Figures/blinding.pdf",width=3.5,height=3.5)
+ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(gsub("\\.*0+%","%",scales::label_percent()(prop)),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")+labs(color="Metadata retained",x="Prediction error / days",y="Density")
+ggsave("../manuscript/Figures/blinding.pdf",width=5.5,height=3.5)
 ```
 ```{r}
 ggplot(all %>% filter(rnorm(length(name))<0.000001), aes(x=date_gt,y=predicted_date)) +geom_point(alpha=0.1)+coord_fixed()+facet_wrap(~name)
