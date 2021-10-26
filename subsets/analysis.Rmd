@@ -106,6 +106,29 @@ both %>% filter(date=="?") %>%mutate(is_hit = predicted_date>lower_date & upper_
 
 ```
 
+```{r}
+ground_truth = read_tsv("../public-2021-09-15.metadata.tsv.gz")%>% unique()
+predicted <- read_tsv("d:/chron_analysis/full_public_tree/date.tsv")
+combo = inner_join(ground_truth, predicted)
+combo = combo %>% mutate(date_proc = ymd(date))
+ 
+subset = combo %>% filter(!is.na(date_proc)) %>% mutate(error = as_date(predicted_date)-date_proc) %>% mutate(within_a_day=abs(error)<8)
+tab = table(subset$within_a_day)
+tab/sum(tab)
+
+subset %>% filter(abs(error)>90)
+
+common_lineages =(combo %>% group_by(pango_lineage_usher) %>% summarise(n=n()) %>% arrange(-n))$pango_lineage_usher[1:7]
+
+combo$lineage_new = case_when(combo$pango_lineage_usher %in% common_lineages~combo$pango_lineage_usher,TRUE ~ "Other" )
+
+p<-ggplot(combo %>% filter(abs(error>10)|rnorm(nrow(combo))>0.99),aes(x=date_proc,y=as_date(predicted_date),color=lineage_new))+geom_point(size=0.1)+scale_color_manual(values=c(tableau_color_pal()(7),"gray")) +theme_bw()+labs(x="Date from metadata",y="Predicted date (Chronumental)",color="Lineage")
+
+ggsave("../manuscript/Figures/anac.png", width=4,height=3)
+
+
+```
+
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
