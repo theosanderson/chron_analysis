@@ -31,9 +31,9 @@ In recent years a number of approaches have been developed for creating time-tre
 \begin{figure}[t]
 \centering
 \includegraphics[width=1\linewidth]{Figures/timetree.pdf}
-\caption{\textbf{This is a nucleus.}\\
-(\textbf{A}) This is a one-column figure with a legend as a caption underneath.}
-\label{fig:nucleus}
+\caption{\textbf{A time tree calculated using Chronumental for a phylogeny of 2,045,884 nodes.} The starting point for this tree is the 2021-09-15 public tree \citep{McBroome2021-fn}. This visualisation is from Taxonium, with points are filtered to reduce overplotting.
+}
+\label{publictree}
 \end{figure}
 
 The unprecedented response to the SARS-CoV-2 pandemic has created a new magnitude of viral genomic data to which none of these tools easily scale. Nextstrain \citep{Hadfield2018-fb} has been an invaluable tool for analysis of viral genomic data during the SARS-CoV-2 pandemic, in part because it presents sequence data as easily interpretable time-trees, which are inferred using TreeTime. However these calculations are one of the key bottlenecks in the analysis, and together such bottlenecks mean that NextStrain analyses are typically limited to fewer than 10,000 sequences, sampled in a principled way. With more than 4,000,000 SARS-CoV-2 genomes now sequenced, such analyses use only 0.25\% of the available sequencing data (though sampled to provide as much information as possible). Importantly, however sophisticated a time-tree algorithm, its performance can still be limited by the data provided to it. Every node with chronological metadata creates a constraint on the time tree, providing information about the positions of unknown nodes. In the extreme case in which every circulating virus was sequenced every single day, inferring a time tree would be, in terms of logic, trivial. In countries that have been able to perform large scale genomic surveillance there have been times where a substantial portion (perhaps more than half) of all infections have been sequenced. Such dense data can provide so many constraints on the dates of internal nodes as to make inferring chronology simple, in terms of the sophistication of approach needed, even for a putative human curator working manually. What is not trivial is the scale of the data -- constructing such a time tree for a dataset featuring millions of nodes and branches poses computational challenges, especially given the possibility of occasionally erroneous metadata. To our knowledge no existing tool is able to perform such an analysis.
@@ -51,15 +51,7 @@ The input to our algorithm is a rooted tree, with branch lengths measured in ter
 
 From these time-lengths we can calculate a date for each tip node, by representing its date as the sum of the time-lengths of the edges leading up to them, added to the date of the root (which is treated as a further learnt parameter). An important insight was that we could represent the summation of branch lengths to estimate node dates as a notional matrix multiplication, by imagining constructing a vast matrix in which one dimension represents the leaf nodes, and one dimension represents the internal branches, with a 1 at each element $x\_{i,j}$ where branch j contributes towards the date of leaf node i, and a 0 where it does not. When this matrix is multiplied by a vector of time-lengths for each branch it would yield the date corresponding to each leaf node.  Such a matrix would contain $>10^{12}$ elements, dwarfing any resources, but since almost all elements are 0s, it can be represented as a ``sparse matrix'', encoded in coordinate list (COO) format, with the matrix multiplication performed through `take' and `segment\_sum' XLA operations. Representing the operations in this way allows them to be efficiently compiled in XLA, which creates a differentiable graph of arithmetic operations. 
 
-\begin{figure*}[t!]
-\centering
-\includegraphics[width=0.8\linewidth]{manuscript/Figures/blinding.pdf}
-\label{fig:blinding}
-\caption{\textbf{Computational requirements and runtime comparison}\\
 
-(\textbf{A}) This is a regular figure with a legend as a caption underneath. Inset: 3X zoom. Scale bar, \SI{10}{\micro\meter}.}
-
-\end{figure*}
 We treat these modelled final dates as the centres of normal distributions, with observations corresponding to the dates actually seen. Notionally the variance in this normal distribution has two sources: firstly general additional sampling dynamics which aren't modelled, and manifest as noise, and secondly gross metadata errors. Treating these observations as samples of a random distribution permits Chronumental to occasionally place samples very differently in time from where their metadata would suggest, which is essential given that some samples will have metadata errors that would otherwise provide such a strong constraint as to prevent a reasonable time tree being created. Additionally, Chronumental is able to accept dates at a range of precisions, from days (2021-03-05) to months (2021-03) to years (2021). The variance of the normal distribution is scaled according to the indicated uncertainty.
 
 The second set of data available to our algorithm is the number of mutations that occurred in each branch. We consider these to be observations of Poisson distributions whose rates are calculated by multiplying the time-length of each branch by a learnt parameter representing the mutation rate (treated as the same for all branches). This aspect of the model means that, within the constraints above, branch lengths in distance are made to correlate with branch lengths in time. The starting value of the clock rate can be set by the user, or the clock rate can be entirely fixed at a manually given value. If the user does neither the initial value of the clock rate is automatically estimated by root-to-tip regression.
@@ -74,7 +66,13 @@ Our immediate motivation in developing Chronumental was to allow time trees to b
 
 We used Chronumental to create time trees for both of these trees, using default parameters other than increasing the number of steps to 2000. In the interests of reproducible open-source analysis we focus our benchmarking studies on the UCSC public tree. Its creators maintain an archive of trees from various points in time, and here we used the 2021-09-15 tree.
 
-
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\linewidth]{Figures/anac.png}
+\caption{\textbf{A time tree calculated using Chronumental for a phylogeny of 2,045,884 nodes.} The starting point for this tree is the 2021-09-15 public tree \citep{McBroome2021-fn}. This visualisation is from Taxonium, with points are filtered to reduce overplotting.
+}
+\label{anac}
+\end{figure}
 
 
 \subsection*{Benchmarking}
@@ -83,25 +81,18 @@ We initially assessed the general plausibility of our trees by visualising and e
 
 We performed such an analysis on the 2021-09-15 public tree, with a wide range of proportions of the metadata blinded to assess how important densely sampled data are to predicting node dates.
 
+\begin{figure*}[t!]
+\centering
+\includegraphics[width=0.7\linewidth]{manuscript/Figures/blinding.pdf}
+\label{fig:blinding}
+\caption{\textbf{Computational requirements and runtime comparison}\\
+.}
+
+\end{figure*}
+
+
 \subsection*{Speed and memory usage comparisons}
-To provide a sense of the challenge that Chronumental was designed to address, we compared its running times and memory usage with those from an existing tool, TreeTime, for a range of tree sizes. We started from the 2021-09-31 public tree, and used gotree's \texttt{prune} function \citep{gotree} to retain a small proportion of nodes, which we increased in increments. We then predicted time trees with both Chronumental and TreeTime (running with simply the \texttt{--dates}, \texttt{--tree}, \texttt{--keep-root} and \texttt{--sequence\_length} parameters) for each, stopping for TreeTime once runtime reached 100 minutes. Chronumental was run for 1000 steps in all cases, either in CPU mode or in GPU mode.
-
-
-\subsection*{Comparing outputs to a traditional algorithm}
-
-To compare our algorithm to one previously used, we used the dataset of Ebola genomes from the 2014 outbreak of Ebola in West Africa  \citep{Dudas2017-km}, using the 350 genomes and metadata presented in the treetime\_examples repository by \citet{Sagulenko2018-kr}. We firstly ran TreeTime, with the \texttt{--confidence} and \texttt{--covariance} parameters (and providing the sequence alignment). In the course of this analysis TreeTime re-rooted the distance tree, which it output alongside the time tree. We used this re-rooted distance tree as an input to Chronumental, along with the metadata, and compared its results for the internal nodes lacking metadata to those obtained with TreeTime.
-
-
-\section*{Results}
-
-\subsection*{A time tree with xxx nodes}
-
-We used Chronumental to assign dates to each node in the public global tree created by UCSC. The algorithm was able to construct a tree in which x\% of sequences were placed within a day of their metadata position. Supervision is provided on these dates, so this simply measures the algorithms ability to reconcile date metadata into a tree structure, rather than its ability to predict the dates for nodes where the date is unknown.
-
-
-\subsection*{Identification of anachronistic nodes}
-
-Interestingly, we found xxx nodes were placed more than yyy from their date as indicated in the metadata. In doing this the algorithm incurs a large cost to its loss function (a true date so far from the observed date is considered highly unlikely), and so the expectation is that this will only occur where placing that node close to the date recorded in its metadata is also extremely unlikely, given the mutation profile and tree topology observed. To consider these possibilities, we plotted the metadata date of sequences against their observed date. We see, as expected, an extremely close relationship, with rare outliers. By categorising nodes according to the lineage of their sequences, we can see whether the genotypes of the samples plausibly correspond to their metadata date. We found that outlier samples belonged to lineages that are known not to have existed at the time at which their metadata would indicate, suggesting that the metadata is inaccurate for these sequences, and the calculated date significantly more correct. 
+To provide a sense of the challenge that Chronumental was designed to address, we compared its running times and memory usage with those from an existing tool, TreeTime, for a range of tree sizes. We started from the 2021-09-31 public tree, and used gotree's \texttt{prune} function \citep{gotree} to retain a small proportion of nodes, which we increased in increments. We then predicted time trees with both Chronumental and TreeTime (running with simply the \texttt{-{}-dates}, \texttt{-{}-tree}, \texttt{-{}-keep-root} and \texttt{-{}-sequence\_length} parameters) for each, stopping for TreeTime once runtime reached 100 minutes. Chronumental was run for 1000 steps in all cases, either in CPU mode or in GPU mode.
 
 \begin{figure*}
 \centering
@@ -110,12 +101,30 @@ Interestingly, we found xxx nodes were placed more than yyy from their date as i
 
 \end{figure*}
 
+\subsection*{Comparing outputs to a traditional algorithm}
 
-We happened to perform the same analysis on a later dataset (xxxx) in which due to a temporary metadata error, a relatively large set of sequences had been given erroneous dates. Again, such sequences were immediately apparent on a plot. Due perhaps to the large number of such sequences, predicted dates for some sequences lay somewhere between their date as indicated in the metadata and the actual likely ground truth date (late due to the presence of the Delta lineage). This suggests that the most robust approach would be an iterative one in which an initial time tree is fit, and used to identify  spurious metadata, which is then excluded in a subsequent analysis. It is also possible that one could improve the approach by making the distribution of observed dates a mixture distribution of a very tight normal distribution representing samples with correct metadata and a high-variance, or even uniform, distribution representing occasional metadata errors.
+To compare our algorithm to one previously used, we used the dataset of Ebola genomes from the 2014 outbreak of Ebola in West Africa  \citep{Dudas2017-km}, using the 350 genomes and metadata presented in the treetime\_examples repository by \citet{Sagulenko2018-kr}. We firstly ran TreeTime, with the \texttt{-{}-confidence} and \texttt{-{}-covariance} parameters (and providing the sequence alignment). In the course of this analysis TreeTime re-rooted the distance tree, which it output alongside the time tree. We used this re-rooted distance tree as an input to Chronumental, along with the metadata, and compared its results for the internal nodes lacking metadata to those obtained with TreeTime.
 
-To facilitate analyses of anachronistic sequences, or the imputing of dates for sequences with missing metadata (which can be either wholly missing, or coarse to the level of months or years -- creating a rough prior) Chronumental provides a flag that exports a TSV file containing its own calculated dates for all tips on the tree.
 
-\subsection*{Benchmarking ability to infer suppressed metadata}
+\section*{Results}
+
+
+
+\subsection*{Time trees with millions of nodes}
+
+We used Chronumental to assign dates to each node in the trees created by UCSC (\Cref{publictree}), and GISAID. Within the first 180 steps of fitting, the algorithm was able to place the median terminal nodes within a day of its position in the metadata. After fitting 90\% of nodes were placed within 3 days of their metadata position (and 99\% within 2 weeks) -- supervision is provided on these dates, so this simply measures the algorithms ability to reconcile date metadata into a tree structure, rather than its ability to predict the dates for nodes where the date is unknown.
+
+
+\subsection*{Identification of anachronistic nodes}
+
+Though the vast majority of points were assigned dates very close to their actual dates recorded in the metadata, but we found 182 nodes were placed more than 90 days away from their date as indicated in the metadata. In doing this the algorithm incurs a large cost to its loss function (a true date so far from the observed date is considered highly unlikely), and so the expectation is that this will only occur where placing that node close to the date recorded in its metadata is also extremely unlikely, given the mutation profile and tree topology observed. To consider these possibilities, we plotted the metadata date of sequences against their observed date (\Cref{anac}). We see, as expected, an extremely close relationship, but with rare outliers. By categorising nodes according to the lineage of their sequences, we can see whether the genotypes of the samples plausibly correspond to their metadata date. We found that outlier samples in general belonged to lineages that are known not to have existed at the time at which their metadata would indicate, suggesting that the metadata is inaccurate for these sequences, and the calculated date significantly more correct. 
+
+We happened to perform the same analysis on a later dataset (2021-10-09) in which due to a temporary metadata error, a relatively large set of sequences had been given erroneous dates. Again, such sequences were immediately apparent on a plot. Due perhaps to the large number of such sequences, predicted dates for some sequences lay somewhere between their date as indicated in the metadata and the actual likely ground truth date (late due to the presence of the Delta lineage). This suggests that the most robust approach would be an iterative one in which an initial time tree is fit, and used to identify  spurious metadata, which is then excluded in a subsequent analysis. It is also possible that one could improve the approach by making the distribution of observed dates a mixture distribution of a very tight normal distribution representing samples with correct metadata and a high-variance, or even uniform, distribution representing occasional metadata errors.
+
+To facilitate analyses of anachronistic sequences, or the imputing of dates for sequences with missing metadata (which can be either wholly missing, or coarse to the level of months or years -- creating a rough prior). Chronumental provides a flag that exports a TSV file containing its own calculated dates for all tips on the tree.
+
+\subsection*{Assessing predictive performance using suppressed metadata}
+
 
 
 
