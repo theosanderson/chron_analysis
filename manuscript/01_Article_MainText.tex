@@ -49,7 +49,7 @@ Chronumental is implemented in Python using NumPyro \citep{phan2019composable}, 
 
 The input to our algorithm is a rooted tree, with branch lengths measured in terms of a number of mutations (either absolute or normalised per-site). For most of the tips of the tree, there will be associated date metadata. Our aim is to estimate the length of time represented by each edge of the tree, and hence the dates associated with all nodes, including the internal nodes that lack metadata. We treat the length of each branch in units of time as a learnable parameter, with a prior of a normal distribution, truncated at 0, centred on the initial approximation that time-lengths will be approximated by mutation-lengths divided by the mutation rate. 
 
-From these time-lengths we can calculate a date for each tip node, by representing its date as the sum of the time-lengths of the edges leading up to them, added to the date of the root (which is treated as a further learnt parameter). An important insight was that we could represent the summation of branch lengths to estimate node dates as a notional matrix multiplication, by imagining constructing a vast matrix in which one dimension represents the leaf nodes, and one dimension represents the internal branches, with a 1 at each element $x\_{i,j}$ where branch j contributes towards the date of leaf node i, and a 0 where it does not. When this matrix is multiplied by a vector of time-lengths for each branch it would yield the date corresponding to each leaf node.  Such a matrix would contain $>10^{12}$ elements, dwarfing any resources, but since almost all elements are 0s, it can be represented as a ``sparse matrix'', encoded in coordinate list (COO) format, with the matrix multiplication performed through `take' and `segment\_sum' XLA operations. Representing the operations in this way allows them to be efficiently compiled in XLA, which creates a differentiable graph of arithmetic operations. 
+From these time-lengths we can calculate a date for each tip node, by representing its date as the sum of the time-lengths of the edges leading up to them, added to the date of the root (which is treated as a further learnt parameter). An important insight was that we could represent the summation of branch lengths to estimate node dates as a notional matrix multiplication, by imagining constructing a vast matrix in which one dimension represents the leaf nodes, and one dimension represents the internal branches, with a 1 at each element $x_{i,j}$ where branch j contributes towards the date of leaf node i, and a 0 where it does not. When this matrix is multiplied by a vector of time-lengths for each branch it would yield the date corresponding to each leaf node.  Such a matrix would contain $>10^{12}$ elements, dwarfing any resources, but since almost all elements are 0s, it can be represented as a ``sparse matrix'', encoded in coordinate list (COO) format, with the matrix multiplication performed through `take' and `segment\_sum' XLA operations. Representing the operations in this way allows them to be efficiently compiled in XLA, which creates a differentiable graph of arithmetic operations. 
 
 
 We treat these modelled final dates as the centres of normal distributions, with observations corresponding to the dates actually seen. Notionally the variance in this normal distribution has two sources: firstly general additional sampling dynamics which aren't modelled, and manifest as noise, and secondly gross metadata errors. Treating these observations as samples of a random distribution permits Chronumental to occasionally place samples very differently in time from where their metadata would suggest, which is essential given that some samples will have metadata errors that would otherwise provide such a strong constraint as to prevent a reasonable time tree being created. Additionally, Chronumental is able to accept dates at a range of precisions, from days (2021-03-05) to months (2021-03) to years (2021). The variance of the normal distribution is scaled according to the indicated uncertainty.
@@ -94,12 +94,6 @@ We performed such an analysis on the 2021-09-15 public tree, with a wide range o
 \subsection*{Speed and memory usage comparisons}
 To provide a sense of the challenge that Chronumental was designed to address, we compared its running times and memory usage with those from an existing tool, TreeTime, for a range of tree sizes. We started from the 2021-09-31 public tree, and used gotree's \texttt{prune} function \citep{gotree} to retain a small proportion of nodes, which we increased in increments. We then predicted time trees with both Chronumental and TreeTime (running with simply the \texttt{-{}-dates}, \texttt{-{}-tree}, \texttt{-{}-keep-root} and \texttt{-{}-sequence\_length} parameters) for each, stopping for TreeTime once runtime reached 100 minutes. Chronumental was run for 1000 steps in all cases, either in CPU mode or in GPU mode.
 
-\begin{figure*}
-\centering
-\includegraphics[width=0.9\linewidth]{manuscript/Figures/performance.pdf}
-\caption{\label{performance} asa}
-
-\end{figure*}
 
 \subsection*{Comparing outputs to a traditional algorithm}
 
@@ -125,14 +119,24 @@ To facilitate analyses of anachronistic sequences, or the imputing of dates for 
 
 \subsection*{Assessing predictive performance using suppressed metadata}
 
+We make a series of time-tree predictions in which we hid from the algorithm dates on a range of tips, from 10\% up to 99.95\%. In the 10\%-suppressed setting, which provides an indication of the bounds on our ability to predict dates for internal nodes, 89\% of predictions were within 30 days of their known ground truth value. In the 90\%-suppressed setting, providing a sense of a more sparsely sampled tree, still 81\% of predictions were within 30 days of ground-truth.  When the amount of dates retained fell to just 0.005\% (99.95\%-suppressed), 54\% of dates could be predicted within 30 days.
 
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.9\linewidth]{manuscript/Figures/performance.pdf}
+\caption{\label{performance} asa}
+
+\end{figure*}
 
 
 \subsection*{Dudas}
 
+72\% of the dates predicted by Chronumental lay within the confidence intervals calculated by TreeTime. If we assume that TreeTime is perfectly calibrated, then the maximum value that Chronumental could achieve (oracularly predicting exactly the correct date in every case) would be 90\%, since TreeTime outputs 90\% confidence intervals.
+
 
 \subsection*{Speed and memory usage comparison}
-To illustrate the problem Chronumental attempts to solve, we compared the runtime and memory usage of Chronumental and TreeTime for a range of differently sized phylogenies (\Cref{performance}). Broadly, running time could be perhaps a hundredfold lower with Chronumental, with resource usage at least an order of magnitude lower. However such comparisons are fraught with caveats. Chronumental's runtime varies with the number of steps chosen, depending on the level of precision required, and a more experienced user of TreeTime might also be able to customise it for increased performance. These results should be interpreted mostly as general trends, and in the context that TreeTime provides the potential for carrying out many other features. We also compared Chronumental running in GPU mode and CPU mode. We found that as tree size approached a million nodes, running on a GPU prevented runtime from increasing substantially, but that prior to this running on a CPU was preferable.
+To illustrate the problem Chronumental attempts to solve, we compared the runtime and memory usage of Chronumental and TreeTime for a range of differently sized phylogenies (\Cref{performance}). Broadly, running time could be perhaps a hundredfold lower with Chronumental, with resource usage at least an order of magnitude lower. However such comparisons are fraught with caveats. Chronumental's runtime varies with the number of steps chosen, depending on the level of precision required, and a more experienced user of TreeTime might alsocustomise it for increased performance. These results should be interpreted as general trends, and in the context that TreeTime provides the potential for carrying out many other features. We also compared Chronumental running in GPU mode and CPU mode. We found that as tree size approached a million nodes, running on a GPU prevented runtime from increasing substantially, but that prior to this running on a CPU was preferable.
 
 
 
