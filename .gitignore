@@ -1,2 +1,5 @@
 pruning/working/**
 subsets/metadata*
+ebola/wandb/**
+ebola/2021-10-26**
+

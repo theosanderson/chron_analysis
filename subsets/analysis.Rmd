@@ -1,4 +1,5 @@
 
+
 ---
 title: "R Notebook"
 output: html_notebook
@@ -18,10 +19,10 @@ library(lubridate)
 ```{r}
 
     
-treetime = read_delim("~/ebola/dates.tsv",delim="\t", ,skip=1) %>% rename(node=`#node`) %>% mutate(lower = date_decimal(as.numeric(`lower bound`)),upper = date_decimal(as.numeric(`upper bound`)),middle = date_decimal(as.numeric(`numeric date`)))
+treetime = read_delim("../ebola/2021-10-26_treetime/dates.tsv",delim="\t", ,skip=1)%>% rename(node=`#node`) %>% mutate(lower = date_decimal(as.numeric(`lower bound`)),upper = date_decimal(as.numeric(`upper bound`)),middle = date_decimal(as.numeric(`numeric date`)))
 
 
-chronumental = read_tsv("/Users/sandert/treetime_examples/data/ebola/chronumental_dates_ebola.metadata.csv.tsv", col_names = c("node","date_chron"))
+chronumental = read_tsv("../ebola/dates_chron.tsv", col_names = c("node","date_chron"))
 chronumental
 
 both = inner_join(treetime,chronumental)
@@ -29,9 +30,12 @@ both
 
 
 internal = both %>% filter(startsWith(node,"NODE_"))
-ggplot(internal,aes(x=middle,xmin=lower,xmax=upper,y=as_date(date_chron)))+geom_errorbarh(color="gray")+geom_point(size=0.5) +theme_bw()
+ggplot(internal,aes(x=middle,xmin=lower,xmax=upper,y=as_date(date_chron)))+geom_errorbarh(color="gray")+geom_point(size=0.5) +theme_bw()+labs(x="TreeTime date (and 90% CI)",y="Chronumental date")
+fig.save
 
-mean(internal$date_chron > internal$lower & internal$date_chron <internal$upper,na.rm=TRUE)+labs(x="Treetime date with confidence interval",y="")
+mean(as_date(internal$upper) >= as_date(internal$date_chron) & as_date(internal$lower)<= as_date(internal$date_chron),na.rm=TRUE)
+
+
 
 ```
 ```{r}
@@ -44,7 +48,7 @@ ground_truth = read_tsv("../public-2021-09-15.metadata.tsv.gz")
 ground_truth$date = ymd(ground_truth$date)
 ground_truth = ground_truth%>% filter(!is.na(date)) %>% unique()
 
-files = list.files(".",pattern=".*out.tsv.gz$")
+files = list.files(".",pattern=".*out.tsv$")
 
 do_analysis = function(a_file){
   print(a_file)
@@ -76,12 +80,10 @@ unique(all$name)
 ```{r}
 all$prop = as.numeric(gsub( "metadata_subset_","",gsub( ".tsv","",all$name)))
 ```
-```{r}
-all
-```
+
 
 ```{r}
-
+subset
 
 
 library(scales)
@@ -90,6 +92,12 @@ levels = gsub("\\.*0+%","%",scales::label_percent()(sort(unique(all$prop))))
 ggplot(all %>% filter(name!="metadata_subset_5e-06.tsv",name!="metadata_subset_5e-05.tsv",name!="metadata_subset_0.01.tsv"),aes(x=days_diff,color=factor(gsub("\\.*0+%","%",scales::label_percent()(prop)),levels =levels))) + geom_density(bw=2,n=3000)+coord_cartesian(xlim=c(-60,60))+theme_bw()+scale_color_viridis_d(option="turbo")+labs(color="Metadata retained",x="Prediction error / days",y="Density")
 ggsave("../manuscript/Figures/blinding.pdf",width=5.5,height=3.5)
 ```
+```{r}
+subset = all %>% filter(prop==0.0005) 
+mean(abs(subset$days_diff)<30)
+```
+
+
 ```{r}
 ggplot(all %>% filter(rnorm(length(name))<0.000001), aes(x=date_gt,y=predicted_date)) +geom_point(alpha=0.1)+coord_fixed()+facet_wrap(~name)
 ```
@@ -107,6 +115,7 @@ both %>% filter(date=="?") %>%mutate(is_hit = predicted_date>lower_date & upper_
 ```
 
 ```{r}
+library(ggthemes)
 ground_truth = read_tsv("../public-2021-09-15.metadata.tsv.gz")%>% unique()
 predicted <- read_tsv("d:/chron_analysis/full_public_tree/date.tsv")
 combo = inner_join(ground_truth, predicted)
@@ -122,9 +131,9 @@ common_lineages =(combo %>% group_by(pango_lineage_usher) %>% summarise(n=n()) %
 
 combo$lineage_new = case_when(combo$pango_lineage_usher %in% common_lineages~combo$pango_lineage_usher,TRUE ~ "Other" )
 
-p<-ggplot(combo %>% filter(abs(error>10)|rnorm(nrow(combo))>0.99),aes(x=date_proc,y=as_date(predicted_date),color=lineage_new))+geom_point(size=0.1)+scale_color_manual(values=c(tableau_color_pal()(7),"gray")) +theme_bw()+labs(x="Date from metadata",y="Predicted date (Chronumental)",color="Lineage")
+p<-ggplot(combo %>% filter(abs(as_date(predicted_date)-date_proc)>10|rnorm(nrow(combo))>0.99),aes(x=date_proc,y=as_date(predicted_date),color=lineage_new))+geom_point(size=0.1)+scale_color_manual(values=c(tableau_color_pal()(7),"gray")) +theme_bw()+labs(x="Date from metadata",y="Predicted date (Chronumental)",color="Lineage")
 
-ggsave("../manuscript/Figures/anac.png", width=4,height=3)
+ggsave("../manuscript/Figures/anac.png", width=4,height=3,dpi=400)
 
 
 ```
@@ -134,3 +143,4 @@ Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by press
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
 
 The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
