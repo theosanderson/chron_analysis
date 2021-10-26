@@ -30,7 +30,7 @@ both
 
 internal = both %>% filter(startsWith(node,"NODE_"))
 ggplot(internal,aes(x=middle,xmin=lower,xmax=upper,y=as_date(date_chron)))+geom_errorbarh(color="gray")+geom_point(size=0.5) +theme_bw()+labs(x="TreeTime date (and 90% CI)",y="Chronumental date")
-fig.save
+ggsave("../manuscript/Figures/ebola.pdf",width=4,height=3)
 
 mean(as_date(internal$upper) >= as_date(internal$date_chron) & as_date(internal$lower)<= as_date(internal$date_chron),na.rm=TRUE)
 
