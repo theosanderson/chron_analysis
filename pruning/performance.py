@@ -91,9 +91,9 @@ def main():
         if args.mode == 'treetime':
             command = f"treetime --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --sequence-length 30000  --keep-root --outdir ./working/"
         elif args.gpu:
-            command = f"chronumental --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --tree_out /dev/null --dates_out /dev/null --steps 1000"
+            command = f"chronumental --treat_mutation_units_as_normalised_to_genome_size 30000 --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --tree_out /dev/null --dates_out /dev/null --use_gpu --steps 1000"
         else:
-            command = f"chronumental --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --tree_out /dev/null --dates_out /dev/null --steps 1000 --disable_gpu"
+            command = f"chronumental --treat_mutation_units_as_normalised_to_genome_size 30000 --dates working/metadata.{num_tips}.tsv --tree working/tree_scaled.{num_tips}.nwk --tree_out /dev/null --dates_out /dev/null --steps 1000"
         timing, mem = run_command_and_get_time_and_memory_usage(command)
         output_file.write(f"{num_tips}\t{timing}\t{mem}\n")
         output_file.flush()
