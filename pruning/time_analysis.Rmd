@@ -43,6 +43,8 @@ mem_plot_log
 
 
 ggarrange(time_plot,mem_plot,time_plot_log,mem_plot_log,  common.legend = TRUE,labels="AUTO")
+ggsave("../manuscript/Figures/performance.pdf",width=7,height=7)
+```
 
 ```
 
