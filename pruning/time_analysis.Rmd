@@ -16,6 +16,7 @@ library(ggpubr)
 
 library(ggthemes)
 perf = read_tsv("performance.tsv") %>% mutate(algorithm_full="TreeTime") %>% mutate(algorithm="TreeTime")
+perf
 perf_chron = read_tsv("performance_chron.tsv") %>% mutate(algorithm_full="Chronumental (1000 steps, CPU)")%>% mutate(algorithm="Chronumental (1000 steps, CPU)")
 perf_chron_gpu = read_tsv("performance_chron_gpu.tsv") %>% mutate(algorithm_full="Chronumental (1000 steps, GPU)")%>% mutate(algorithm="Chronumental (1000 steps, GPU)")
 
