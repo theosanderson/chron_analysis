@@ -22,7 +22,7 @@ theo.sanderson\at crick.ac.uk
 
 
 \section*{Introduction}\label{s:introduction}
-The accumulation of mutations over time in living things means that genomes sequenced from a population capture information on the historical connections between its members. For non-recombining organisms such as viruses, these can be represented as a phylogenetic tree. The tips of such a tree are sequenced viruses, where we have a genome sequence, and typically also metadata on the date and location at which the sample was taken. Phylogenetic trees are often represented as a "distance-tree" in which the lengths of branches correspond to the genetic distance predicted between ancestral nodes and their descendants. However an alternative approach is to create a "time-tree", where all nodes are positioned according to the date at which they are thought to have occurred. While establishing the dates of the tips is straightforward, using the metadata, inferring the likely dates for internal nodes requires the use of algorithms.
+The accumulation of mutations over time in living things means that genomes sequenced from a population capture information on the historical connections between its members. These can be represented as a phylogenetic tree. The tips of such a tree are sequenced viruses, where we have a genome sequence, and typically also metadata on the date and location at which the sample was taken. Phylogenetic trees are often represented as a "distance-tree" in which the lengths of branches correspond to the genetic distance predicted between ancestral nodes and their descendants. However an alternative approach is to create a "time-tree", where all nodes are positioned according to the date at which they are thought to have occurred. While establishing the dates of the tips is straightforward, using the metadata, inferring the likely dates for internal nodes requires the use of algorithms.
 
 
 
@@ -108,7 +108,7 @@ To compare our algorithm to one previously used, we used the dataset of Ebola ge
 
 We used Chronumental to assign dates to each node in the 2019-09-15 tree created by UCSC (\Cref{publictree}). Within the first 180 steps of fitting, the algorithm was able to place the median terminal node within a day of its position in the metadata. After the algorithm completed, 90\% of nodes were placed within 3 days of their metadata position (and 99\% within 2 weeks). Supervision is provided on these dates, so this simply measures the algorithm's ability to reconcile date metadata into a tree structure, rather than its ability to predict the dates for nodes where the date is unknown.
 
-The resulting tree, with 2,045,884 nodes, can be visualised using Taxonium at \url{https://cov2tree-git-timetreedemo-theosanderson.vercel.app/?protoUrl=\%2Ftimetree.pb.gz}.
+Functionality for inferring time trees with Chronumental is now built into Taxonium \citep{taxonium}, and the latest time trees for public data can be visualised at \url{http://Cov2Tree.org}, where the Chronumental output is available for download.
 
 
 \subsection*{Identification of anachronistic nodes}

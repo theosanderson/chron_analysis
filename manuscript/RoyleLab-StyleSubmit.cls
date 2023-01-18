@@ -83,8 +83,8 @@
                 labelsep=period,%
                 figurename=Figure]{caption}
 %% line numbers
-\RequirePackage{lineno}
-\linenumbers
+%\RequirePackage{lineno}
+%\linenumbers
 
 %% Hyperlinking
 \RequirePackage[colorlinks=true, allcolors=blue]{hyperref}
